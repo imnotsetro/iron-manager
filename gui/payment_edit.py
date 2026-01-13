@@ -2,8 +2,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit,
     QComboBox, QPushButton, QMessageBox
 )
-from PySide6.QtGui import QDoubleValidator
-from PySide6.QtCore import Signal
+from PySide6.QtGui import QDoubleValidator, QFont
+from PySide6.QtCore import Signal, Qt
 import datetime
 from models.payment import PaymentModel
 from controllers.payment_controller import PaymentController
@@ -22,35 +22,61 @@ class PaymentEditWindow(QWidget):
         self.payment_model = PaymentModel(self.db)
         self.payment_controller = PaymentController(self.db)
 
+        # Configurar tamaño de ventana
+        self.setMinimumSize(500, 250)
+        self.resize(550, 300)
+
         self.setup_ui()
         self.load_payment()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        
         form_layout = QFormLayout()
+        form_layout.setSpacing(10)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+
+        # Fuente para los campos
+        field_font = QFont()
+        field_font.setPointSize(11)
 
         self.name_input = QLineEdit()
+        self.name_input.setMinimumHeight(30)
+        self.name_input.setFont(field_font)
         self.name_input.setReadOnly(True)  # No editing client name
 
         self.amount_input = QLineEdit()
+        self.amount_input.setMinimumHeight(30)
+        self.amount_input.setFont(field_font)
+        # limit 2 to float
         validator = QDoubleValidator(0.00, 1e9, 2, self)
         validator.setNotation(QDoubleValidator.StandardNotation)
         self.amount_input.setValidator(validator)
+        # Enter to save changes
+        self.amount_input.returnPressed.connect(self.save_changes)
 
         self.month_combo = QComboBox()
+        self.month_combo.setMinimumHeight(30)
+        self.month_combo.setFont(field_font)
         spanish_months = [
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         ]
-        for i, month in enumerate(spanish_months, start=1):
-            self.month_combo.addItem(month, i)
+        for i, mes in enumerate(spanish_months, start=1):
+            self.month_combo.addItem(mes, i)
 
         self.year_combo = QComboBox()
+        self.year_combo.setMinimumHeight(30)
+        self.year_combo.setFont(field_font)
         current_year = datetime.datetime.now().year
         for y in range(current_year - 5, current_year + 5):
             self.year_combo.addItem(str(y), y)
 
         self.description_input = QLineEdit()
+        self.description_input.setMinimumHeight(30)
+        self.description_input.setFont(field_font)
 
         form_layout.addRow("Nombre del cliente:", self.name_input)
         form_layout.addRow("Monto a pagar:", self.amount_input)
@@ -59,6 +85,8 @@ class PaymentEditWindow(QWidget):
         form_layout.addRow("Descripción:", self.description_input)
 
         self.submit_btn = QPushButton("Guardar Cambios")
+        self.submit_btn.setMinimumHeight(30)
+        self.submit_btn.setFont(field_font)
         self.submit_btn.clicked.connect(self.save_changes)
 
         layout.addLayout(form_layout)

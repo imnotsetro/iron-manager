@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit,
     QComboBox, QPushButton, QMessageBox, QCompleter
 )
-from PySide6.QtGui import QDoubleValidator
+from PySide6.QtGui import QDoubleValidator, QFont
 from PySide6.QtCore import Signal, Qt
 import datetime
 from models.client import ClientModel
@@ -21,24 +21,43 @@ class PaymentWindow(QWidget):
         self.client_model = ClientModel(self.db)
         self.payment_controller = PaymentController(self.db)
 
+        # Configurar tamaño de ventana
+        self.setMinimumSize(500, 250)
+        self.resize(550, 300)
+
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        
         form_layout = QFormLayout()
+        form_layout.setSpacing(10)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+
+        # Fuente para los campos
+        field_font = QFont()
+        field_font.setPointSize(11)
 
         self.nombre_input = QLineEdit()
+        self.nombre_input.setMinimumHeight(30)
+        self.nombre_input.setFont(field_font)
 
         # Autocomplete setup usando el modelo
         names = self.client_model.get_all_names()
         completer = QCompleter(names, self)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setMaxVisibleItems(10)
+        completer.popup().setStyleSheet("QListView { font-size: 11pt; }")
         self.nombre_input.setCompleter(completer)
 
         # Enter to register payment
         self.nombre_input.returnPressed.connect(self.register_payment)
 
         self.monto_input = QLineEdit()
+        self.monto_input.setMinimumHeight(30)
+        self.monto_input.setFont(field_font)
         # limit 2 to float
         validator = QDoubleValidator(0.00, 1e9, 2, self)
         validator.setNotation(QDoubleValidator.StandardNotation)
@@ -47,6 +66,8 @@ class PaymentWindow(QWidget):
         self.monto_input.returnPressed.connect(self.register_payment)
 
         self.month_combo = QComboBox()
+        self.month_combo.setMinimumHeight(30)
+        self.month_combo.setFont(field_font)
         spanish_months = [
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -56,12 +77,16 @@ class PaymentWindow(QWidget):
         self.month_combo.setCurrentIndex(datetime.datetime.now().month - 1)
 
         self.year_combo = QComboBox()
+        self.year_combo.setMinimumHeight(30)
+        self.year_combo.setFont(field_font)
         current_year = datetime.datetime.now().year
         for y in range(current_year - 5, current_year + 5):
             self.year_combo.addItem(str(y), y)
         self.year_combo.setCurrentText(str(current_year))
 
         self.descripcion_input = QLineEdit()
+        self.descripcion_input.setMinimumHeight(30)
+        self.descripcion_input.setFont(field_font)
 
         form_layout.addRow("Nombre del cliente:", self.nombre_input)
         form_layout.addRow("Monto a pagar:", self.monto_input)
@@ -70,6 +95,8 @@ class PaymentWindow(QWidget):
         form_layout.addRow("Descripción:", self.descripcion_input)
 
         self.submit_btn = QPushButton("Registrar Pago")
+        self.submit_btn.setMinimumHeight(30)
+        self.submit_btn.setFont(field_font)
         self.submit_btn.clicked.connect(self.register_payment)
 
         layout.addLayout(form_layout)
