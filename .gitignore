@@ -1,0 +1,6 @@
+# Database file
+data.db
+
+# Byte-compiled files
+__pycache__/
+*.pyc
