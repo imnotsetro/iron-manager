@@ -150,6 +150,44 @@ class PaymentModel:
             return payment.id
         return None
 
+    def update_client_last_payment(self, client_id: int):
+        """
+        Actualiza el último pago del cliente basándose en el pago más reciente.
+        Retorna True si se actualizó correctamente, False en caso contrario.
+        """
+        from models.client import Client
+        
+        try:
+            # Obtener el pago más reciente
+            latest_payment_id = self.get_latest_payment_for_client(client_id)
+            
+            # Actualizar el cliente
+            client = self.session.query(Client).filter_by(id=client_id).first()
+            if client:
+                client.last_payment_id = latest_payment_id
+                self.session.commit()
+                return True
+            return False
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error updating client last payment: {e}")
+            return False
+
+    def should_update_last_payment(self, payment_id: int, client_id: int):
+        """
+        Verifica si un pago debe ser el último pago del cliente.
+        Retorna True si el pago es el más reciente.
+        """
+        latest = self.session.query(Payment.id).filter_by(
+            client_id=client_id
+        ).order_by(
+            Payment.year.desc(),
+            Payment.month.desc(),
+            Payment.id.desc()
+        ).first()
+
+        return latest and latest.id == payment_id
+
     def get_payments_filtered(self, name: str = None, month: int = None, year: int = None):
         """Obtiene pagos filtrados por nombre, mes y año."""
         from models.client import Client

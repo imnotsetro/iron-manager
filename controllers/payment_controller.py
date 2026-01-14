@@ -31,16 +31,11 @@ class PaymentController:
             return False, "El cliente ya pagó ese mes.", False, None, None
 
         # Validar secuencia de pagos
-        update_last_payment = False
         expected_month, expected_year = None, None
 
         if last_payment_id is not None:
             last_month, last_year = self.payment_model.get_last_payment_info(last_payment_id)
             if last_month is not None and last_year is not None:
-                # Comparar fechas
-                if (year, month) > (last_year, last_month):
-                    update_last_payment = True
-
                 # Calcular mes/año esperado
                 if last_month == 12:
                     expected_month = 1
@@ -53,17 +48,14 @@ class PaymentController:
                 if not skip_validation:
                     if (year, month) != (expected_year, expected_month):
                         return True, "", True, expected_month, expected_year
-        else:
-            update_last_payment = True
 
         # Crear el pago
         new_payment_id = self.payment_model.create_payment(client_id, amount, month, year, description)
         if not new_payment_id:
             return False, "No se pudo registrar el pago", False, None, None
 
-        # Actualizar último pago si corresponde
-        if update_last_payment:
-            self.client_model.update_last_payment(client_id, new_payment_id)
+        # Actualizar último pago del cliente (delegado al modelo)
+        self.payment_model.update_client_last_payment(client_id)
 
         return True, "Pago registrado correctamente", False, None, None
 
@@ -87,9 +79,8 @@ class PaymentController:
         if not self.payment_model.update_payment(payment_id, amount, month, year, description):
             return False, "No se pudo actualizar el pago"
 
-        # Actualizar last_payment_id si este es el pago más reciente
-        if self.payment_model.is_latest_payment(payment_id, client_id):
-            self.client_model.update_last_payment(client_id, payment_id)
+        # Actualizar último pago del cliente (delegado al modelo)
+        self.payment_model.update_client_last_payment(client_id)
 
         return True, "Pago actualizado correctamente"
 
@@ -107,8 +98,8 @@ class PaymentController:
         last_payment_id = self.payment_model.get_latest_payment_for_client(client_id)
 
         if last_payment_id:
-            # Actualizar last_payment_id
-            if not self.client_model.update_last_payment(client_id, last_payment_id):
+            # Actualizar último pago del cliente (delegado al modelo)
+            if not self.payment_model.update_client_last_payment(client_id):
                 return False, "No se pudo actualizar el último pago del cliente."
         else:
             # No hay más pagos, eliminar el cliente
