@@ -30,9 +30,34 @@ class SQLAlchemyTableModel(QAbstractTableModel):
         return len(self._headers) if self._data else 0
 
     def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+
+        row = self._data[index.row()]
+        col = index.column()
+
         if role == Qt.DisplayRole:
-            row = self._data[index.row()]
-            return str(row[index.column()])
+            try:
+                value = row[col]
+            except Exception:
+                value = ""
+
+            # Formatear la columna Monto como moneda
+            if col == 2:
+                try:
+                    amount = float(value) if value is not None else 0.0
+                    return f"${amount:,.2f}"
+                except Exception:
+                    return str(value)
+
+            return str(value)
+
+        # Alinear montos a la derecha
+        if role == Qt.TextAlignmentRole:
+            if col == 2:
+                return Qt.AlignRight | Qt.AlignVCenter
+            return Qt.AlignLeft | Qt.AlignVCenter
+
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
