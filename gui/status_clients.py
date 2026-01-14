@@ -115,7 +115,9 @@ class ClientStatusViewer(QWidget):
     def __init__(self, db):
         super().__init__()
         self.setWindowTitle("Estado de Pagos de Clientes")
-        self.resize(662, 520)
+        # Ventana más ancha para mostrar nombres largos
+        self.resize(700, 500)
+        self.setMinimumSize(800, 600)
         self.db = db  # SQLAlchemy Database instance
 
         # Inicializar modelo
@@ -212,7 +214,11 @@ class ClientStatusViewer(QWidget):
 
         col_count = model.columnCount()
         if col_count > 0:
-            ancho = int(self.table.viewport().width() / col_count)
-            for col in range(col_count):
+            # Hacer que la primera columna (Cliente) ocupe el espacio restante
+            header.setSectionResizeMode(0, QHeaderView.Stretch)
+
+            # Columnas restantes con ancho fijo razonable
+            other_width = 120
+            for col in range(1, col_count):
                 header.setSectionResizeMode(col, QHeaderView.Fixed)
-                self.table.setColumnWidth(col, ancho)
+                self.table.setColumnWidth(col, other_width)
